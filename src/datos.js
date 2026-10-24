@@ -1,8 +1,8 @@
 // Bruto necesario por refinado, por tier (de ao-bin-dumps items.xml). Cada refinado además consume 1 refinado del tier anterior.
 export const BRUTO_POR_TIER = { 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 5, 8: 5 }
 
-// Fama base por refinado plano (sin bonos); cada encantamiento la duplica. Tiers con spec: T4-T8.
-// shortcut: derivada de la fama de craftear (720/2880/8640/20640/44640 por 32 recursos), no verificada en juego para refinar.
+// Fama base por refinado plano (sin bonos), verificada en albiononline2d. Tiers con spec: T4-T8.
+// El encantamiento no la duplica entera, ver famaPorRefinado en calculo.js.
 export const FAMA_POR_REFINADO = { 4: 22.5, 5: 90, 6: 270, 7: 645, 8: 1395 }
 
 export const RAMAS = [
@@ -14,3 +14,5 @@ export const RAMAS = [
 ]
 
 export const ENCANTAMIENTOS = [0, 1, 2, 3, 4]
+
+export const BONO_PREMIUM = 50

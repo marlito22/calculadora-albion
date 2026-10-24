@@ -1,11 +1,27 @@
 import { BRUTO_POR_TIER, FAMA_POR_REFINADO } from './datos.js'
 import { FAMA_NIVEL } from './famaNiveles.js'
+import { FAMA_NIVEL_CRAFTEO, FAMA_POR_MATERIAL } from './datosCrafteo.js'
 
 // Fama que falta para llegar al nivel 100, descontando lo ya acumulado dentro del nivel actual.
-export function famaRestante(tier, nivel, acumulada = 0) {
-  const total = FAMA_NIVEL[tier].slice(nivel).reduce((a, b) => a + b, 0)
+export function famaRestante(tier, nivel, acumulada = 0, tabla = FAMA_NIVEL[tier]) {
+  const total = tabla.slice(nivel).reduce((a, b) => a + b, 0)
   return Math.max(0, total - acumulada)
 }
+
+export const famaRestanteCrafteo = (nivel, acumulada) => famaRestante(null, nivel, acumulada, FAMA_NIVEL_CRAFTEO)
+
+// Las esencias de criatura (ALCHEMY_RARE) son como los artefactos: ni dan fama ni devuelven retorno (confirmado en juego).
+const esEsencia = ([item]) => item.includes('_ALCHEMY_RARE_')
+
+// Fama de un crafteo (toda la tanda): materiales de la receta por la fama por material de comidas o pociones.
+export const famaPorCrafteo = (tipo, receta) =>
+  receta.ing.filter((i) => !esEsencia(i)).reduce((a, [, n]) => a + n, 0) * FAMA_POR_MATERIAL[tipo]
+
+export const crafteosNecesarios = (fama, famaCrafteo, bonoPct = 0) => Math.ceil(fama / (famaCrafteo * (1 + bonoPct / 100)))
+
+// Ingredientes totales de `crafteos` tandas; el retorno solo baja los que no son esencias.
+export const ingredientes = (receta, crafteos, retorno = 0) =>
+  receta.ing.map((i) => [i[0], Math.ceil(crafteos * i[1] * (esEsencia(i) ? 1 : 1 - retorno))])
 
 // Bono local 18 + foco 59 + ciudad de la rama 40 (igual que la fórmula de retorno de crafteo).
 export function tasaRetorno({ foco, ciudad }) {
@@ -13,9 +29,14 @@ export function tasaRetorno({ foco, ciudad }) {
   return 1 - 1 / (1 + lpb / 100)
 }
 
+// Fama de un refinado: cada refinado consume el del tier anterior del mismo encantamiento, salvo el T3 que no
+// se encanta (7,5 fijos); el resto se duplica por encantamiento. T4: 22,5 / 37,5 / 67,5 / 127,5 / 247,5; T6.1: 532,5.
+// shortcut: verificado en albiononline2d con tablones T4 (.0-.4) y T6.1 y con barras T6; la piedra falta por comprobar.
+export const famaPorRefinado = (tier, encantamiento = 0) => 7.5 + (FAMA_POR_REFINADO[tier] - 7.5) * 2 ** encantamiento
+
 // Refinados del tier objetivo para juntar la fama; bonoPct = bono de fama (premium, etc.).
 export function refinadosNecesarios(tier, fama, encantamiento = 0, bonoPct = 0) {
-  return Math.ceil(fama / (FAMA_POR_REFINADO[tier] * 2 ** encantamiento * (1 + bonoPct / 100)))
+  return Math.ceil(fama / (famaPorRefinado(tier, encantamiento) * (1 + bonoPct / 100)))
 }
 
 // Una fila por tier desde T2. Cada refinado gasta (1 - retorno) de sus ingredientes, y el refinado
