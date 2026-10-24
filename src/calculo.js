@@ -2,13 +2,13 @@ import { BRUTO_POR_TIER, FAMA_POR_REFINADO } from './datos.js'
 import { FAMA_NIVEL } from './famaNiveles.js'
 import { FAMA_NIVEL_CRAFTEO, FAMA_POR_MATERIAL } from './datosCrafteo.js'
 
-// Fama que falta para llegar al nivel 100, descontando lo ya acumulado dentro del nivel actual.
-export function famaRestante(tier, nivel, acumulada = 0, tabla = FAMA_NIVEL[tier]) {
-  const total = tabla.slice(nivel).reduce((a, b) => a + b, 0)
+// Fama que falta para pasar del nivel `nivel` al `meta`, descontando lo ya acumulado dentro del nivel actual.
+export function famaRestante(tier, nivel, acumulada = 0, tabla = FAMA_NIVEL[tier], meta = 100) {
+  const total = tabla.slice(nivel, meta).reduce((a, b) => a + b, 0)
   return Math.max(0, total - acumulada)
 }
 
-export const famaRestanteCrafteo = (nivel, acumulada) => famaRestante(null, nivel, acumulada, FAMA_NIVEL_CRAFTEO)
+export const famaRestanteCrafteo = (nivel, acumulada, meta) => famaRestante(null, nivel, acumulada, FAMA_NIVEL_CRAFTEO, meta)
 
 // Las esencias de criatura (ALCHEMY_RARE) son como los artefactos: ni dan fama ni devuelven retorno (confirmado en juego).
 const esEsencia = ([item]) => item.includes('_ALCHEMY_RARE_')

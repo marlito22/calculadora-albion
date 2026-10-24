@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CRAFTEO, NOMBRES_INGREDIENTE } from './datosCrafteo.js'
 import { BONO_PREMIUM } from './datos.js'
 import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, tasaRetorno } from './calculo.js'
-import { nf, campo, panel, boton, Icono, IconoFama } from './ui.jsx'
+import { nf, campo, panel, boton, Icono, IconoFama, DeslizadorRango } from './ui.jsx'
 
 // Comidas y pociones: una rama = un nodo del Tablero del Destino (todos con la misma tabla de fama).
 export default function Crafteo({ tipo }) {
@@ -10,6 +10,7 @@ export default function Crafteo({ tipo }) {
   const [rama, setRama] = useState(ramas[0].id)
   const [tier, setTier] = useState(0)
   const [nivel, setNivel] = useState(0)
+  const [meta, setMeta] = useState(100)
   const [acumulada, setAcumulada] = useState(0)
   const [bono, setBono] = useState(0)
   const [premium, setPremium] = useState(false)
@@ -20,7 +21,8 @@ export default function Crafteo({ tipo }) {
   const tiers = Object.keys(info.recetas).map(Number)
   const t = tiers.includes(tier) ? tier : tiers[tiers.length - 1] // al cambiar de rama el tier puede no existir
   const receta = info.recetas[t]
-  const fama = famaRestanteCrafteo(nivel, acumulada)
+  const objetivo = Math.max(meta, nivel)
+  const fama = famaRestanteCrafteo(nivel, acumulada, objetivo)
   const bonoTotal = bono + (premium ? BONO_PREMIUM : 0)
   const famaCrafteo = famaPorCrafteo(tipo, receta)
   const crafteos = crafteosNecesarios(fama, famaCrafteo, bonoTotal)
@@ -51,15 +53,7 @@ export default function Crafteo({ tipo }) {
             ))}
           </div>
         </div>
-        <label className="sm:col-span-2">
-          <span className="flex items-center justify-between">
-            Nivel actual de spec
-            <b className="rounded-md bg-black/70 px-3 py-1 text-lg text-amber-400">{nivel}</b>
-          </span>
-          <input className="my-2 h-3 w-full cursor-pointer accent-amber-400" type="range" min="0" max="100" value={nivel}
-            onChange={(e) => setNivel(Number(e.target.value))} />
-          <span className="flex justify-between text-xs text-slate-400"><span>0</span><span>50</span><span>100</span></span>
-        </label>
+        <DeslizadorRango desde={nivel} hasta={objetivo} setDesde={setNivel} setHasta={setMeta} />
         <label><span className="flex items-center gap-1">Fama <IconoFama tam={16} /> ya acumulada en tu nivel actual</span>
           <input className={campo} type="number" min="0" value={acumulada}
             onChange={(e) => setAcumulada(Math.max(0, Number(e.target.value) || 0))} />
@@ -77,7 +71,7 @@ export default function Crafteo({ tipo }) {
 
       <section className={panel}>
         <p className="mb-3">
-          Para subir {info.nombre} del nivel {nivel} al 100 faltan <b>{nf.format(fama)}</b> <IconoFama /> de fama:
+          Para subir {info.nombre} del nivel {nivel} al {objetivo} faltan <b>{nf.format(fama)}</b> <IconoFama /> de fama:
           necesitas hacer <b className="text-amber-400">{nf.format(crafteos)}</b> crafteos de {info.nombre} T{t}
           {' '}({nf.format(crafteos * receta.n)} unidades; {nf.format(famaCrafteo)} <IconoFama /> de fama por crafteo de {receta.n}
           {bonoTotal ? `, +${bonoTotal}% de bono` : ''}). Retorno de materiales: {(retorno * 100).toFixed(1)}%.

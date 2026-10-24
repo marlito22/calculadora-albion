@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { RAMAS, FAMA_POR_REFINADO, ENCANTAMIENTOS, BONO_PREMIUM } from './datos.js'
 import { famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaPorRefinado } from './calculo.js'
-import { nf, campo, panel, boton, Icono, IconoFama } from './ui.jsx'
+import { nf, campo, panel, boton, Icono, IconoFama, DeslizadorRango } from './ui.jsx'
 
 export default function Refinacion({ usuario }) {
   const [guardadas, setGuardadas] = useState([])
   const [rama, setRama] = useState('madera')
   const [tier, setTier] = useState(6)
   const [nivel, setNivel] = useState(0)
+  const [meta, setMeta] = useState(100)
   const [acumulada, setAcumulada] = useState(0)
   const [enc, setEnc] = useState(0)
   const [bono, setBono] = useState(0)
@@ -25,7 +26,8 @@ export default function Refinacion({ usuario }) {
     })
   }, [usuario])
 
-  const fama = famaRestante(tier, nivel, acumulada)
+  const objetivo = Math.max(meta, nivel)
+  const fama = famaRestante(tier, nivel, acumulada, undefined, objetivo)
   const sinEnc = rama === 'piedra' // la piedra no tiene versiones encantadas
   const encEfectivo = sinEnc ? 0 : enc
   const bonoTotal = bono + (premium ? BONO_PREMIUM : 0)
@@ -35,7 +37,7 @@ export default function Refinacion({ usuario }) {
   const info = RAMAS.find((r) => r.id === rama)
 
   async function guardar() {
-    const fila = { recurso: rama, tier, nivel, fama_restante: Math.round(fama), actualizado: new Date().toISOString() }
+    const fila = { recurso: rama, tier, nivel, fama_restante: Math.round(famaRestante(tier, nivel, acumulada)), actualizado: new Date().toISOString() }
     const { error } = await supabase.from('specs').upsert({ ...fila, user_id: usuario.id })
     if (error) return setError(error.message)
     setError('')
@@ -81,15 +83,7 @@ export default function Refinacion({ usuario }) {
                 ))}
               </div>
             </div>
-            <label className="sm:col-span-2">
-              <span className="flex items-center justify-between">
-                Nivel actual de spec
-                <b className="rounded-md bg-black/70 px-3 py-1 text-lg text-amber-400">{nivel}</b>
-              </span>
-              <input className="my-2 h-3 w-full cursor-pointer accent-amber-400" type="range" min="0" max="100" value={nivel}
-                onChange={(e) => setNivel(Number(e.target.value))} />
-              <span className="flex justify-between text-xs text-slate-400"><span>0</span><span>50</span><span>100</span></span>
-            </label>
+            <DeslizadorRango desde={nivel} hasta={objetivo} setDesde={setNivel} setHasta={setMeta} />
             <label><span className="flex items-center gap-1">Fama <IconoFama tam={16} /> ya acumulada en tu nivel actual</span>
               <input className={campo} type="number" min="0" value={acumulada}
                 onChange={(e) => setAcumulada(Math.max(0, Number(e.target.value) || 0))} />
@@ -114,7 +108,7 @@ export default function Refinacion({ usuario }) {
   
           <section className={panel}>
             <p className="mb-3">
-              Para subir {info.nombre} T{tier} del nivel {nivel} al 100 faltan <b>{nf.format(fama)}</b> <IconoFama /> de fama:
+              Para subir {info.nombre} T{tier} del nivel {nivel} al {objetivo} faltan <b>{nf.format(fama)}</b> <IconoFama /> de fama:
               necesitas refinar <b className="text-amber-400">{nf.format(refinados)}</b> {info.refinado} T{tier}
               {encEfectivo ? `.${encEfectivo}` : ''} ({nf.format(famaPorRefinado(tier, encEfectivo))} <IconoFama /> de fama c/u{bonoTotal ? `, +${bonoTotal}% de bono` : ''}).
               Retorno de materiales: {(retorno * 100).toFixed(1)}%.

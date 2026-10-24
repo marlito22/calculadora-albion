@@ -52,3 +52,9 @@ test('fama por refinado coincide con albiononline2d: plano T4-T8, tablones T4 en
   assert.deepEqual([0, 1, 2, 3, 4].map((e) => famaPorRefinado(4, e)), [22.5, 37.5, 67.5, 127.5, 247.5])
   assert.equal(famaPorRefinado(6, 1), 532.5)
 })
+
+test('fama de un tramo parcial: del 50 al 70 es la diferencia entre faltar desde el 50 y desde el 70', () => {
+  assert.equal(famaRestante(4, 50, 0, undefined, 70), famaRestante(4, 50) - famaRestante(4, 70))
+  assert.equal(famaRestanteCrafteo(50, 0, 70), famaRestanteCrafteo(50) - famaRestanteCrafteo(70))
+  assert.equal(famaRestante(4, 50, 100000, undefined, 70) > 0, true)
+})
