@@ -43,10 +43,11 @@ export function nivelAlcanzado(nivel, acumulada, fama, tabla = FAMA_NIVEL_CRAFTE
   return { nivel, sobra: nivel === tabla.length ? 0 : sobra }
 }
 
-// Bono local 18 + foco 59 + ciudad de la rama 40 (igual que la fórmula de retorno de crafteo).
-export function tasaRetorno({ foco, ciudad }) {
-  const lpb = 18 + (foco ? 59 : 0) + (ciudad ? 40 : 0)
-  return 1 - 1 / (1 + lpb / 100)
+// Bono de producción = foco 59 + el del lugar: 18 base (+40 si la ciudad es de la rama) o, en un HO, solo el % del HO
+// (sin el 18 base ni ciudad). Comprobado en el juego: HO ~24 % + foco = 45,2 % de devolución.
+export function tasaRetorno({ foco, ciudad, ho = 0 }) {
+  const lugar = ho > 0 ? ho : 18 + (ciudad ? 40 : 0)
+  return 1 - 1 / (1 + (lugar + (foco ? 59 : 0)) / 100)
 }
 
 // Fama de un refinado: cada refinado consume el del tier anterior del mismo encantamiento, salvo el T3 que no

@@ -75,3 +75,11 @@ test('nivelAlcanzado: suma lo acumulado, cruza niveles y se detiene en 100', () 
   assert.deepEqual(nivelAlcanzado(0, 0, famaRestanteCrafteo(0) + 999), { nivel: 100, sobra: 0 })
   assert.deepEqual(nivelAlcanzado(30, 0, 12345), { nivel: 31, sobra: 5205 }) // 12345 - 7140 (nivel 30→31)
 })
+
+test('en un HO el retorno usa solo el % del HO (sin 18 base ni ciudad) y el foco', () => {
+  const r = (o) => Number((tasaRetorno(o) * 100).toFixed(1))
+  assert.equal(r({ ho: 23.5, foco: true }), 45.2) // captura del juego: HO "24 %" + foco = 45,2 %
+  assert.equal(r({ ho: 24, foco: true }), 45.4)
+  assert.equal(r({ ho: 24, ciudad: true }), r({ ho: 24 }))
+  assert.equal(tasaRetorno({ ho: 0 }), tasaRetorno({}))
+})
