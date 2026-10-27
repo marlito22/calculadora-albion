@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { RAMAS, FAMA_POR_REFINADO, ENCANTAMIENTOS, BONO_PREMIUM } from './datos.js'
-import { famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaPorRefinado } from './calculo.js'
-import { nf, campo, panel, boton, Icono, IconoFama, DeslizadorRango } from './ui.jsx'
+import { famaRestante, refinadosNecesarios, materiales, famaPorRefinado } from './calculo.js'
+import { nf, campo, panel, boton, Icono, IconoFama, DeslizadorRango, CampoDevolucion } from './ui.jsx'
 
 export default function Refinacion({ usuario }) {
   const [guardadas, setGuardadas] = useState([])
@@ -14,8 +14,7 @@ export default function Refinacion({ usuario }) {
   const [enc, setEnc] = useState(0)
   const [bono, setBono] = useState(0)
   const [premium, setPremium] = useState(false)
-  const [foco, setFoco] = useState(false)
-  const [ciudad, setCiudad] = useState(false)
+  const [devolucion, setDevolucion] = useState(0) // % de devolución que muestra el juego al fabricar
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export default function Refinacion({ usuario }) {
   const encEfectivo = sinEnc ? 0 : enc
   const bonoTotal = bono + (premium ? BONO_PREMIUM : 0)
   const refinados = refinadosNecesarios(tier, fama, encEfectivo, bonoTotal)
-  const retorno = tasaRetorno({ foco, ciudad })
+  const retorno = devolucion / 100
   const filas = materiales(tier, refinados, retorno)
   const info = RAMAS.find((r) => r.id === rama)
 
@@ -94,8 +93,7 @@ export default function Refinacion({ usuario }) {
             </label>
             <div className="flex flex-col justify-end gap-1">
               <label><input type="checkbox" checked={premium} onChange={(e) => setPremium(e.target.checked)} /> Tengo premium (+{BONO_PREMIUM}% de fama)</label>
-              <label><input type="checkbox" checked={foco} onChange={(e) => setFoco(e.target.checked)} /> Usar foco</label>
-              <label><input type="checkbox" checked={ciudad} onChange={(e) => setCiudad(e.target.checked)} /> Ciudad con bono de {info.nombre.toLowerCase()}</label>
+              <CampoDevolucion valor={devolucion} onChange={setDevolucion} />
             </div>
             {usuario && (
               <button className="rounded bg-emerald-600 px-3 py-2 font-semibold sm:col-span-2" onClick={guardar}>

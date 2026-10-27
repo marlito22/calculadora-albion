@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { CRAFTEO, NOMBRES_INGREDIENTE } from './datosCrafteo.js'
 import { BONO_PREMIUM } from './datos.js'
-import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, crafteosPosibles, nivelAlcanzado, ingredientes, tasaRetorno } from './calculo.js'
-import { nf, campo, panel, Icono, IconoFama, DeslizadorRango, Selector } from './ui.jsx'
+import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, crafteosPosibles, nivelAlcanzado, ingredientes } from './calculo.js'
+import { nf, campo, panel, Icono, IconoFama, DeslizadorRango, Selector, CampoDevolucion } from './ui.jsx'
 
 // Comidas y pociones: una rama = un nodo del Tablero del Destino (todos con la misma tabla de fama).
 export default function Crafteo({ tipo }) {
@@ -16,9 +16,7 @@ export default function Crafteo({ tipo }) {
   const [premium, setPremium] = useState(false)
   const [tengo, setTengo] = useState({})
   const [resultado, setResultado] = useState(null) // foto al pulsar "Calcular spec": no cambia hasta volver a pulsar
-  const [ho, setHo] = useState(0)
-  const [foco, setFoco] = useState(false)
-  const [ciudad, setCiudad] = useState(false)
+  const [devolucion, setDevolucion] = useState(0) // % de devolución que muestra el juego al fabricar
 
   const info = ramas.find((r) => r.id === rama) ?? ramas[0]
   const tiers = Object.keys(info.recetas).map(Number)
@@ -29,7 +27,7 @@ export default function Crafteo({ tipo }) {
   const bonoTotal = bono + (premium ? BONO_PREMIUM : 0)
   const famaCrafteo = famaPorCrafteo(tipo, receta)
   const crafteos = crafteosNecesarios(fama, famaCrafteo, bonoTotal)
-  const retorno = tasaRetorno({ foco, ciudad, ho })
+  const retorno = devolucion / 100
   const posibles = crafteosPosibles(receta, tengo, retorno)
   const idItem = `T${t}_${info.item}`
 
@@ -106,13 +104,7 @@ export default function Crafteo({ tipo }) {
         </label>
         <div className="flex flex-col justify-end gap-1 sm:col-span-2">
           <label><input type="checkbox" checked={premium} onChange={(e) => setPremium(e.target.checked)} /> Tengo premium (+{BONO_PREMIUM}% de fama)</label>
-          <label><input type="checkbox" checked={foco} onChange={(e) => setFoco(e.target.checked)} /> Usar foco</label>
-          <label><input type="checkbox" checked={ciudad} disabled={ho > 0} onChange={(e) => setCiudad(e.target.checked)} /> Ciudad con bono de {info.nombre.toLowerCase()}</label>
-          <label className="flex items-center gap-2">
-            <input className={`${campo} !w-16 !px-2 !py-1`} type="number" min="0" max="100" step="0.1" value={ho}
-              onChange={(e) => setHo(Math.min(100, Math.max(0, Number(e.target.value) || 0)))} />
-            % de HO que estamos clasificando en un HO actualmente
-          </label>
+          <CampoDevolucion valor={devolucion} onChange={setDevolucion} />
         </div>
       </section>
 

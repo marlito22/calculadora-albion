@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { famaPorRefinado, famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, crafteosPosibles, nivelAlcanzado } from './calculo.js'
+import { famaPorRefinado, famaRestante, refinadosNecesarios, materiales, famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, crafteosPosibles, nivelAlcanzado } from './calculo.js'
 import { CRAFTEO } from './datosCrafteo.js'
 
 test('T6: 100 refinados sin retorno piden 400 bruto T6, 300 T5, 200 T4, 200 T3 y 100 T2', () => {
@@ -12,11 +12,6 @@ test('T6: 100 refinados sin retorno piden 400 bruto T6, 300 T5, 200 T4, 200 T3 y
 test('con retorno 50% cada escalón gasta la mitad', () => {
   const filas = materiales(3, 100, 0.5)
   assert.deepEqual(filas.map((f) => [f.refinado, f.bruto]), [[50, 25], [100, 100]])
-})
-
-test('tasa de retorno coincide con albiondatabase', () => {
-  const r = (o) => Number((tasaRetorno(o) * 100).toFixed(1))
-  assert.deepEqual([r({}), r({ foco: true }), r({ ciudad: true }), r({ foco: true, ciudad: true })], [15.3, 43.5, 36.7, 53.9])
 })
 
 test('refinadosNecesarios redondea hacia arriba, aplica encantamiento y bono', () => {
@@ -74,12 +69,4 @@ test('nivelAlcanzado: suma lo acumulado, cruza niveles y se detiene en 100', () 
   assert.deepEqual(nivelAlcanzado(0, 0, 1782 + 1892 + 5), { nivel: 2, sobra: 5 })
   assert.deepEqual(nivelAlcanzado(0, 0, famaRestanteCrafteo(0) + 999), { nivel: 100, sobra: 0 })
   assert.deepEqual(nivelAlcanzado(30, 0, 12345), { nivel: 31, sobra: 5205 }) // 12345 - 7140 (nivel 30→31)
-})
-
-test('en un HO el retorno usa solo el % del HO (sin 18 base ni ciudad) y el foco', () => {
-  const r = (o) => Number((tasaRetorno(o) * 100).toFixed(1))
-  assert.equal(r({ ho: 23.5, foco: true }), 45.2) // captura del juego: HO "24 %" + foco = 45,2 %
-  assert.equal(r({ ho: 24, foco: true }), 45.4)
-  assert.equal(r({ ho: 24, ciudad: true }), r({ ho: 24 }))
-  assert.equal(tasaRetorno({ ho: 0 }), tasaRetorno({}))
 })

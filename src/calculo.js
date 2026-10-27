@@ -43,13 +43,6 @@ export function nivelAlcanzado(nivel, acumulada, fama, tabla = FAMA_NIVEL_CRAFTE
   return { nivel, sobra: nivel === tabla.length ? 0 : sobra }
 }
 
-// Bono de producción = foco 59 + el del lugar: 18 base (+40 si la ciudad es de la rama) o, en un HO, solo el % del HO
-// (sin el 18 base ni ciudad). Comprobado en el juego: HO ~24 % + foco = 45,2 % de devolución.
-export function tasaRetorno({ foco, ciudad, ho = 0 }) {
-  const lugar = ho > 0 ? ho : 18 + (ciudad ? 40 : 0)
-  return 1 - 1 / (1 + (lugar + (foco ? 59 : 0)) / 100)
-}
-
 // Fama de un refinado: cada refinado consume el del tier anterior del mismo encantamiento, salvo el T3 que no
 // se encanta (7,5 fijos); el resto se duplica por encantamiento. T4: 22,5 / 37,5 / 67,5 / 127,5 / 247,5; T6.1: 532,5.
 // shortcut: verificado en albiononline2d con tablones T4 (.0-.4) y T6.1 y con barras T6; la piedra falta por comprobar.

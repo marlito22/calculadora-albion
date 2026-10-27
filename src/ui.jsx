@@ -49,6 +49,17 @@ export function Icono({ tier, item, id, enc = 0, tam = 40 }) {
   )
 }
 
+// % de devolución de recursos tal como lo muestra el juego al fabricar (ya incluye foco, ciudad y HO).
+export function CampoDevolucion({ valor, onChange }) {
+  return (
+    <label className="flex items-center gap-2">
+      <input className={`${campo} !w-16 !px-2 !py-1`} type="number" min="0" max="100" step="0.1" value={valor}
+        onChange={(e) => onChange(Math.min(100, Math.max(0, Number(e.target.value) || 0)))} />
+      % de devolución de recursos (el que muestra el juego al fabricar)
+    </label>
+  )
+}
+
 // Menú desplegable con icono por opción (un <select> nativo no puede mostrar imágenes).
 // opciones = [{ valor, etiqueta, icono }]; se cierra con clic fuera, Escape o al elegir.
 export function Selector({ etiqueta, opciones, valor, onChange }) {
