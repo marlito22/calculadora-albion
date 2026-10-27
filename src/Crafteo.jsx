@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { CRAFTEO, NOMBRES_INGREDIENTE } from './datosCrafteo.js'
 import { BONO_PREMIUM } from './datos.js'
-import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, tasaRetorno } from './calculo.js'
-import { nf, campo, panel, boton, Icono, IconoFama, DeslizadorRango } from './ui.jsx'
+import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, crafteosPosibles, ingredientes, tasaRetorno } from './calculo.js'
+import { nf, campo, panel, Icono, IconoFama, DeslizadorRango, Selector } from './ui.jsx'
 
 // Comidas y pociones: una rama = un nodo del Tablero del Destino (todos con la misma tabla de fama).
 export default function Crafteo({ tipo }) {
@@ -14,6 +14,7 @@ export default function Crafteo({ tipo }) {
   const [acumulada, setAcumulada] = useState(0)
   const [bono, setBono] = useState(0)
   const [premium, setPremium] = useState(false)
+  const [tengo, setTengo] = useState({})
   const [foco, setFoco] = useState(false)
   const [ciudad, setCiudad] = useState(false)
 
@@ -27,32 +28,53 @@ export default function Crafteo({ tipo }) {
   const famaCrafteo = famaPorCrafteo(tipo, receta)
   const crafteos = crafteosNecesarios(fama, famaCrafteo, bonoTotal)
   const retorno = tasaRetorno({ foco, ciudad })
+  const posibles = crafteosPosibles(receta, tengo, retorno)
   const idItem = `T${t}_${info.item}`
 
   return (
     <div className="space-y-6">
+      <section className={`${panel} relative z-10 space-y-4`}>
+        <div className="grid grid-cols-[2fr_1fr] gap-4">
+          <Selector etiqueta="Rama" valor={info.id} onChange={setRama}
+            opciones={ramas.map((r) => ({ valor: r.id, etiqueta: r.nombre, icono: <Icono id={`T${Math.max(...Object.keys(r.recetas))}_${r.item}`} tam={32} /> }))} />
+          <Selector etiqueta="Tier a craftear" valor={t} onChange={setTier}
+            opciones={tiers.map((x) => ({ valor: x, etiqueta: `T${x}`, icono: <Icono id={`T${x}_${info.item}`} tam={32} /> }))} />
+        </div>
+        <div>
+          <p className="mb-2">
+            Mínimo para craftear: <b className="text-amber-400">1 crafteo</b> = {receta.n} unidades de {info.nombre} T{t}
+          </p>
+          <table className="w-full text-left">
+            <thead className="text-slate-400">
+              <tr><th className="pb-2">Material</th><th>Necesitas</th><th className="w-28">Tengo</th></tr>
+            </thead>
+            <tbody>
+              {receta.ing.map(([id, n]) => (
+                <tr key={id} className="border-t border-slate-700/80">
+                  <td className="py-1"><span className="flex items-center gap-2"><Icono id={id} />{NOMBRES_INGREDIENTE[id]}</span></td>
+                  <td>{nf.format(n)}</td>
+                  <td className="py-1">
+                    <input className={campo} type="number" min="0" aria-label={`Tengo ${NOMBRES_INGREDIENTE[id]}`} value={tengo[id] ?? ''} placeholder="0"
+                      onChange={(e) => setTengo({ ...tengo, [id]: Math.max(0, Number(e.target.value) || 0) })} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-3 flex items-center gap-2">
+            <Icono id={idItem} tam={32} />
+            {posibles.crafteos > 0 ? (
+              <span>Con lo que tienes puedes hacer <b className="text-amber-400">{nf.format(posibles.crafteos)}</b> crafteos
+                = <b className="text-amber-400">{nf.format(posibles.crafteos * receta.n)}</b> unidades de {info.nombre} T{t}
+                {' '}(retorno {(retorno * 100).toFixed(1)}%).</span>
+            ) : (
+              <span>Con lo que tienes no alcanza para 1 crafteo: te falta <b className="text-amber-400">{NOMBRES_INGREDIENTE[posibles.limitante]}</b>.</span>
+            )}
+          </p>
+        </div>
+      </section>
+
       <section className={`${panel} grid gap-4 sm:grid-cols-2`}>
-        <div className="sm:col-span-2">
-          <p className="mb-1">Rama</p>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-            {ramas.map((r) => (
-              <button key={r.id} className={boton(info.id === r.id)} onClick={() => setRama(r.id)}>
-                <Icono id={`T${Math.max(...Object.keys(r.recetas))}_${r.item}`} />
-                {r.nombre}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="sm:col-span-2">
-          <p className="mb-1">Tier a craftear</p>
-          <div className="grid grid-cols-5 gap-2">
-            {tiers.map((x) => (
-              <button key={x} className={`${boton(t === x)} py-3 text-sm font-semibold`} onClick={() => setTier(x)}>
-                T{x}
-              </button>
-            ))}
-          </div>
-        </div>
         <DeslizadorRango desde={nivel} hasta={objetivo} setDesde={setNivel} setHasta={setMeta} />
         <label><span className="flex items-center gap-1">Fama <IconoFama tam={16} /> ya acumulada en tu nivel actual</span>
           <input className={campo} type="number" min="0" value={acumulada}

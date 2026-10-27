@@ -1,4 +1,6 @@
-export const nf = new Intl.NumberFormat('es')
+import { useEffect, useRef, useState } from 'react'
+
+export const nf =new Intl.NumberFormat('es')
 // Campos y paneles opacos con borde dorado para que no se confundan con el fondo.
 export const campo = 'w-full rounded-md bg-black/70 border border-slate-500 px-3 py-2 text-slate-100 focus:border-amber-400 focus:outline-none'
 export const panel = 'rounded-xl border border-amber-500/40 bg-slate-950/90 p-5 shadow-2xl shadow-black/60 backdrop-blur-md'
@@ -44,6 +46,46 @@ export function Icono({ tier, item, id, enc = 0, tam = 40 }) {
       src={`https://render.albiononline.com/v1/item/${id ?? `T${tier}_${item}`}${sufijo}.png?size=64`}
       width={tam} height={tam} alt={id ?? `T${tier}.${enc} ${item}`} loading="lazy"
     />
+  )
+}
+
+// Menú desplegable con icono por opción (un <select> nativo no puede mostrar imágenes).
+// opciones = [{ valor, etiqueta, icono }]; se cierra con clic fuera, Escape o al elegir.
+export function Selector({ etiqueta, opciones, valor, onChange }) {
+  const [abierto, setAbierto] = useState(false)
+  const caja = useRef(null)
+  useEffect(() => {
+    if (!abierto) return
+    const fuera = (e) => !caja.current?.contains(e.target) && setAbierto(false)
+    document.addEventListener('mousedown', fuera)
+    return () => document.removeEventListener('mousedown', fuera)
+  }, [abierto])
+  const actual = opciones.find((o) => o.valor === valor) ?? opciones[0]
+  return (
+    <div ref={caja} className="relative" onKeyDown={(e) => e.key === 'Escape' && setAbierto(false)}>
+      <p className="mb-1">{etiqueta}</p>
+      <button type="button" aria-haspopup="listbox" aria-expanded={abierto} onClick={() => setAbierto(!abierto)}
+        className={`${campo} flex items-center gap-2 text-left hover:border-amber-400`}>
+        {actual.icono}
+        <span className="flex-1 truncate font-semibold">{actual.etiqueta}</span>
+        <span className={`text-amber-400 transition ${abierto ? 'rotate-180' : ''}`}>▾</span>
+      </button>
+      {abierto && (
+        <ul role="listbox" aria-label={etiqueta}
+          className="absolute inset-x-0 z-30 mt-1 max-h-72 overflow-auto rounded-lg border border-amber-500/60 bg-slate-950 p-1 shadow-2xl shadow-black">
+          {opciones.map((o) => (
+            <li key={o.valor} role="option" aria-selected={o.valor === actual.valor} tabIndex={0}
+              onClick={() => { onChange(o.valor); setAbierto(false) }}
+              onKeyDown={(e) => e.key === 'Enter' && (onChange(o.valor), setAbierto(false))}
+              className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 transition ${
+                o.valor === actual.valor ? 'bg-amber-500/20 text-amber-300' : 'text-slate-200 hover:bg-slate-800'
+              }`}>
+              {o.icono}{o.etiqueta}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

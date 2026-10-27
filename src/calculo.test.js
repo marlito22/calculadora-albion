@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { famaPorRefinado, famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes } from './calculo.js'
+import { famaPorRefinado, famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, crafteosPosibles } from './calculo.js'
 import { CRAFTEO } from './datosCrafteo.js'
 
 test('T6: 100 refinados sin retorno piden 400 bruto T6, 300 T5, 200 T4, 200 T3 y 100 T2', () => {
@@ -57,4 +57,13 @@ test('fama de un tramo parcial: del 50 al 70 es la diferencia entre faltar desde
   assert.equal(famaRestante(4, 50, 0, undefined, 70), famaRestante(4, 50) - famaRestante(4, 70))
   assert.equal(famaRestanteCrafteo(50, 0, 70), famaRestanteCrafteo(50) - famaRestanteCrafteo(70))
   assert.equal(famaRestante(4, 50, 100000, undefined, 70) > 0, true)
+})
+
+test('crafteosPosibles: manda el material más escaso, el retorno rinde más y faltar uno da 0', () => {
+  const guiso = CRAFTEO.comidas.find((r) => r.id === 'guiso').recetas[4] // 4 rábano, 4 pan, 8 carne
+  assert.deepEqual(crafteosPosibles(guiso, { T4_TURNIP: 40, T4_BREAD: 40, T4_MEAT: 79 }), { crafteos: 9, limitante: 'T4_MEAT' })
+  assert.equal(crafteosPosibles(guiso, { T4_TURNIP: 40, T4_BREAD: 40, T4_MEAT: 80 }, 0.5).crafteos, 20)
+  assert.deepEqual(crafteosPosibles(guiso, { T4_TURNIP: 40, T4_BREAD: 40 }), { crafteos: 0, limitante: 'T4_MEAT' })
+  const calma = CRAFTEO.pociones.find((r) => r.id === 'calma').recetas[3] // esencia: sin retorno
+  assert.equal(crafteosPosibles(calma, { T3_ALCHEMY_RARE_PANTHER: 3, T3_COMFREY: 999 }, 0.5).crafteos, 3)
 })

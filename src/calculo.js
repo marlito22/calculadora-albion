@@ -23,6 +23,18 @@ export const crafteosNecesarios = (fama, famaCrafteo, bonoPct = 0) => Math.ceil(
 export const ingredientes = (receta, crafteos, retorno = 0) =>
   receta.ing.map((i) => [i[0], Math.ceil(crafteos * i[1] * (esEsencia(i) ? 1 : 1 - retorno))])
 
+// Cuántos crafteos completos (tandas de receta.n unidades) alcanzan con lo que se tiene; `tengo` = { id: cantidad }.
+// Con retorno cada material (menos esencias) rinde más. limitante = material que se agota primero.
+export function crafteosPosibles(receta, tengo, retorno = 0) {
+  let crafteos = Infinity, limitante = null
+  for (const i of receta.ing) {
+    const gasto = i[1] * (esEsencia(i) ? 1 : 1 - retorno)
+    const x = Math.floor((tengo[i[0]] || 0) / gasto + 1e-9) // 1e-9: 0,7*10 no debe dar 6,99
+    if (x < crafteos) [crafteos, limitante] = [x, i[0]]
+  }
+  return { crafteos, limitante }
+}
+
 // Bono local 18 + foco 59 + ciudad de la rama 40 (igual que la fórmula de retorno de crafteo).
 export function tasaRetorno({ foco, ciudad }) {
   const lpb = 18 + (foco ? 59 : 0) + (ciudad ? 40 : 0)
