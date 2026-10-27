@@ -19,17 +19,30 @@ export const famaPorCrafteo = (tipo, receta) =>
 
 export const crafteosNecesarios = (fama, famaCrafteo, bonoPct = 0) => Math.ceil(fama / (famaCrafteo * (1 + bonoPct / 100)))
 
-// Ingredientes totales de `crafteos` tandas; el retorno solo baja los que no son esencias.
-export const ingredientes = (receta, crafteos, retorno = 0) =>
-  receta.ing.map((i) => [i[0], Math.ceil(crafteos * i[1] * (esEsencia(i) ? 1 : 1 - retorno))])
+// Material que hay que juntar para `n` tandas de un ingrediente de cantidad `c`. La devolución llega después de cada
+// crafteo, así que la del último no sirve (n-1 devoluciones), y cada unidad devuelta es un sorteo: se suman MARGEN
+// desviaciones para que no falte en el último crafteo. Sin retorno es exacto (c*n).
+const MARGEN = 2
+const cantidadNecesaria = (c, n, retorno) => {
+  if (n <= 0) return 0
+  const esperado = c * (n - retorno * (n - 1))
+  const desvio = Math.sqrt(c * (n - 1) * retorno * (1 - retorno))
+  return Math.min(Math.ceil(esperado + MARGEN * desvio - 1e-9), c * n)
+}
 
-// Cuántos crafteos completos (tandas de receta.n unidades) alcanzan con lo que se tiene; `tengo` = { id: cantidad }.
-// Con retorno cada material (menos esencias) rinde más. limitante = material que se agota primero.
+// Ingredientes que hay que tener para `crafteos` tandas; las esencias no devuelven nada.
+export const ingredientes = (receta, crafteos, retorno = 0) =>
+  receta.ing.map((i) => [i[0], esEsencia(i) ? i[1] * crafteos : cantidadNecesaria(i[1], crafteos, retorno)])
+
+// Cuántos crafteos completos (tandas de receta.n unidades) alcanzan con lo que se tiene, con el mismo margen que
+// `ingredientes`; `tengo` = { id: cantidad }. limitante = material que se agota primero.
 export function crafteosPosibles(receta, tengo, retorno = 0) {
   let crafteos = Infinity, limitante = null
   for (const i of receta.ing) {
-    const gasto = i[1] * (esEsencia(i) ? 1 : 1 - retorno)
-    const x = Math.floor((tengo[i[0]] || 0) / gasto + 1e-9) // 1e-9: 0,7*10 no debe dar 6,99
+    const hay = tengo[i[0]] || 0
+    const sinRetorno = esEsencia(i) || retorno === 0
+    let x = Math.floor(hay / (sinRetorno ? i[1] : i[1] * (1 - retorno))) + 1
+    while (x > 0 && (sinRetorno ? i[1] * x : cantidadNecesaria(i[1], x, retorno)) > hay) x--
     if (x < crafteos) [crafteos, limitante] = [x, i[0]]
   }
   return { crafteos, limitante }

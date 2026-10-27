@@ -15,7 +15,7 @@ export default function Crafteo({ tipo }) {
   const [bono, setBono] = useState(0)
   const [premium, setPremium] = useState(false)
   const [tengo, setTengo] = useState({})
-  const [resultado, setResultado] = useState(null) // foto al pulsar "Calcular spec": no cambia hasta volver a pulsar
+  const [calculado, setCalculado] = useState(false)
   const [devolucion, setDevolucion] = useState(0) // % de devolución que muestra el juego al fabricar
 
   const info = ramas.find((r) => r.id === rama) ?? ramas[0]
@@ -29,6 +29,11 @@ export default function Crafteo({ tipo }) {
   const crafteos = crafteosNecesarios(fama, famaCrafteo, bonoTotal)
   const retorno = devolucion / 100
   const posibles = crafteosPosibles(receta, tengo, retorno)
+  const unidades = posibles.crafteos * receta.n
+  const extraRetorno = unidades - crafteosPosibles(receta, tengo, 0).crafteos * receta.n // lo que aporta la devolución
+  const ganada = Math.floor(posibles.crafteos * famaCrafteo * (1 + bonoTotal / 100))
+  const alcanzado = nivelAlcanzado(nivel, acumulada, ganada)
+  const bruto = ingredientes(receta, crafteos, 0)
   const idItem = `T${t}_${info.item}`
 
   return (
@@ -67,26 +72,23 @@ export default function Crafteo({ tipo }) {
           <p className="mt-3 flex items-center gap-2">
             <Icono id={idItem} tam={32} />
             {posibles.crafteos > 0 ? (
-              <span>Con lo que tienes puedes craftear <b className="text-amber-400">{nf.format(posibles.crafteos * receta.n)}</b> unidades de {info.nombre} T{t}
-                {' '}(retorno {(retorno * 100).toFixed(1)}%).</span>
+              <span>Con lo que tienes puedes craftear <b className="text-amber-400">{nf.format(unidades)}</b> unidades de {info.nombre} T{t}
+                {' '}({nf.format(unidades - extraRetorno)} con tus materiales + <b className="text-amber-400">{nf.format(extraRetorno)}</b> que te devuelve el {(retorno * 100).toFixed(1)}% de retorno).</span>
             ) : (
               <span>Con lo que tienes no alcanza para craftear {receta.n} unidades: te falta <b className="text-amber-400">{NOMBRES_INGREDIENTE[posibles.limitante]}</b>.</span>
             )}
           </p>
           <button type="button" disabled={posibles.crafteos === 0}
             className="mt-3 w-full rounded-lg border border-amber-400 bg-amber-500/20 px-4 py-2 font-semibold text-amber-300 transition hover:bg-amber-500/30 disabled:opacity-40"
-            onClick={() => {
-              const ganada = Math.floor(posibles.crafteos * famaCrafteo * (1 + bonoTotal / 100))
-              setResultado({ ganada, unidades: posibles.crafteos * receta.n, desde: nivel, rama: info.nombre, ...nivelAlcanzado(nivel, acumulada, ganada) })
-            }}>
+            onClick={() => setCalculado(true)}>
             Calcular spec
           </button>
-          {resultado && (
+          {calculado && posibles.crafteos > 0 && (
             <p className="mt-3">
-              Crafteando {nf.format(resultado.unidades)} unidades de {resultado.rama} ganas <b className="text-amber-400">{nf.format(resultado.ganada)}</b> <IconoFama /> de fama
-              {bonoTotal ? ` (con +${bonoTotal}% de bono)` : ''} y pasas del nivel {resultado.desde} al{' '}
-              <b className="text-amber-400">{resultado.nivel}</b>
-              {resultado.nivel < 100 && ` (con ${nf.format(resultado.sobra)} de fama ya acumulada en ese nivel)`}.
+              Crafteando {nf.format(unidades)} unidades de {info.nombre} ganas <b className="text-amber-400">{nf.format(ganada)}</b> <IconoFama /> de fama
+              {bonoTotal ? ` (con +${bonoTotal}% de bono)` : ''} y pasas del nivel {nivel} al{' '}
+              <b className="text-amber-400">{alcanzado.nivel}</b>
+              {alcanzado.nivel < 100 && ` (con ${nf.format(alcanzado.sobra)} de fama ya acumulada en ese nivel)`}.
             </p>
           )}
         </div>
@@ -113,16 +115,18 @@ export default function Crafteo({ tipo }) {
           Para subir {info.nombre} del nivel {nivel} al {objetivo} faltan <b>{nf.format(fama)}</b> <IconoFama /> de fama:
           necesitas craftear <b className="text-amber-400">{nf.format(crafteos * receta.n)}</b> unidades de {info.nombre} T{t}
           {' '}({nf.format(famaCrafteo / receta.n)} <IconoFama /> de fama por unidad{bonoTotal ? `, +${bonoTotal}% de bono` : ''}). Retorno de materiales: {(retorno * 100).toFixed(1)}%.
+          {retorno === 0 && <span className="text-amber-400"> Escribe el % de devolución abajo para que cuente el retorno.</span>}
         </p>
         <table className="w-full text-left">
           <thead className="text-slate-400">
-            <tr><th className="pb-2">Material</th><th>Cantidad</th></tr>
+            <tr><th className="pb-2">Material</th><th>Debes tener</th><th>Se gasta en total</th></tr>
           </thead>
           <tbody>
-            {ingredientes(receta, crafteos, retorno).map(([id, n]) => (
+            {ingredientes(receta, crafteos, retorno).map(([id, n], k) => (
               <tr key={id} className="border-t border-slate-700/80">
                 <td className="py-1"><span className="flex items-center gap-2"><Icono id={id} />{NOMBRES_INGREDIENTE[id]}</span></td>
-                <td>{nf.format(n)}</td>
+                <td className="font-semibold text-amber-400">{nf.format(n)}</td>
+                <td>{nf.format(bruto[k][1])}</td>
               </tr>
             ))}
           </tbody>

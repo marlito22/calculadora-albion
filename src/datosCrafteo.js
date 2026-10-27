@@ -1,11 +1,13 @@
 // Cocina y alquimia (de ao-bin-dumps items.xml y localization.xml). Cada rama es un nodo del Tablero del Destino
 // y los 25 nodos comparten esta tabla: fama para pasar del nivel i al i+1 (i = índice).
 // Fuente: albiondatabase.com/tools/fame-calculator (nodos FARM_COOK_* y FARM_ALCHEMIST_*).
-export const FAMA_NIVEL_CRAFTEO = [1782,1892,2004,2120,2240,2364,2494,2626,2762,2904,3050,3200,3356,3516,3682,3852,4028,4210,4396,4588,4788,4992,5204,5422,5646,5876,6114,6360,6612,6872,7140,7416,7700,7992,8294,8604,8922,9250,9588,9936,10294,10662,11040,11430,11830,12242,12666,13102,13552,14012,14486,14974,15474,15990,16520,17064,17624,18198,18790,19396,20020,20662,21322,21998,22694,23408,24142,24898,25672,26468,27284,28124,28986,29872,30780,31714,32674,33658,34668,35706,36770,37864,38986,40138,41322,42536,43782,45060,46372,47720,49102,50520,51976,53470,55002,56574,58188,59844,61542,63284]
+// El juego muestra el doble de lo que dicen los datos (Pasteles 42→43: 22.080 = 2 x 11.040), por eso el `.map` x2.
+export const FAMA_NIVEL_CRAFTEO = [1782,1892,2004,2120,2240,2364,2494,2626,2762,2904,3050,3200,3356,3516,3682,3852,4028,4210,4396,4588,4788,4992,5204,5422,5646,5876,6114,6360,6612,6872,7140,7416,7700,7992,8294,8604,8922,9250,9588,9936,10294,10662,11040,11430,11830,12242,12666,13102,13552,14012,14486,14974,15474,15990,16520,17064,17624,18198,18790,19396,20020,20662,21322,21998,22694,23408,24142,24898,25672,26468,27284,28124,28986,29872,30780,31714,32674,33658,34668,35706,36770,37864,38986,40138,41322,42536,43782,45060,46372,47720,49102,50520,51976,53470,55002,56574,58188,59844,61542,63284].map((f) => f * 2)
 
 // Fama por material de la receta, igual en todos los tiers (medida en albiononline2d con guiso T4/T6/T8, pastel T5,
-// curación T6, gigantismo T5 y berserker T4). Las esencias de criatura no dan fama (berserker T4: 320 con 16 materiales).
-export const FAMA_POR_MATERIAL = { comidas: 10, pociones: 20 }
+// curación T6, gigantismo T5 y berserker T4: 10 y 20) y x2 para ir en las mismas unidades que muestra el juego (en tres
+// pruebas reales con pastel T5 salen ~100 por unidad con bono, no 48). Las esencias de criatura no dan fama.
+export const FAMA_POR_MATERIAL = { comidas: 20, pociones: 40 }
 
 // recetas[tier] = { n: unidades por crafteo, ing: [[item, cantidad]] }. Solo ingredientes directos, sin procesar.
 // shortcut: sin encantamientos ni variantes de pescado/Avalon, se agregan si hacen falta.
