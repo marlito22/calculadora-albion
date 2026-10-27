@@ -35,6 +35,14 @@ export function crafteosPosibles(receta, tengo, retorno = 0) {
   return { crafteos, limitante }
 }
 
+// Nivel al que se llega partiendo de `nivel` con `acumulada` de fama dentro del nivel y ganando `fama` más.
+// Devuelve el nivel final y la fama que sobra dentro de él (0 si llega al 100).
+export function nivelAlcanzado(nivel, acumulada, fama, tabla = FAMA_NIVEL_CRAFTEO) {
+  let sobra = acumulada + fama
+  while (nivel < tabla.length && sobra >= tabla[nivel]) sobra -= tabla[nivel++]
+  return { nivel, sobra: nivel === tabla.length ? 0 : sobra }
+}
+
 // Bono local 18 + foco 59 + ciudad de la rama 40 (igual que la fórmula de retorno de crafteo).
 export function tasaRetorno({ foco, ciudad }) {
   const lpb = 18 + (foco ? 59 : 0) + (ciudad ? 40 : 0)

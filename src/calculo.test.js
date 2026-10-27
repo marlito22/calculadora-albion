@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { famaPorRefinado, famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, crafteosPosibles } from './calculo.js'
+import { famaPorRefinado, famaRestante, refinadosNecesarios, materiales, tasaRetorno, famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, ingredientes, crafteosPosibles, nivelAlcanzado } from './calculo.js'
 import { CRAFTEO } from './datosCrafteo.js'
 
 test('T6: 100 refinados sin retorno piden 400 bruto T6, 300 T5, 200 T4, 200 T3 y 100 T2', () => {
@@ -66,4 +66,12 @@ test('crafteosPosibles: manda el material más escaso, el retorno rinde más y f
   assert.deepEqual(crafteosPosibles(guiso, { T4_TURNIP: 40, T4_BREAD: 40 }), { crafteos: 0, limitante: 'T4_MEAT' })
   const calma = CRAFTEO.pociones.find((r) => r.id === 'calma').recetas[3] // esencia: sin retorno
   assert.equal(crafteosPosibles(calma, { T3_ALCHEMY_RARE_PANTHER: 3, T3_COMFREY: 999 }, 0.5).crafteos, 3)
+})
+
+test('nivelAlcanzado: suma lo acumulado, cruza niveles y se detiene en 100', () => {
+  assert.deepEqual(nivelAlcanzado(0, 0, 1781), { nivel: 0, sobra: 1781 })
+  assert.deepEqual(nivelAlcanzado(0, 1, 1781), { nivel: 1, sobra: 0 })
+  assert.deepEqual(nivelAlcanzado(0, 0, 1782 + 1892 + 5), { nivel: 2, sobra: 5 })
+  assert.deepEqual(nivelAlcanzado(0, 0, famaRestanteCrafteo(0) + 999), { nivel: 100, sobra: 0 })
+  assert.deepEqual(nivelAlcanzado(30, 0, 12345), { nivel: 31, sobra: 5205 }) // 12345 - 7140 (nivel 30→31)
 })

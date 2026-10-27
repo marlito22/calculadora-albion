@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CRAFTEO, NOMBRES_INGREDIENTE } from './datosCrafteo.js'
 import { BONO_PREMIUM } from './datos.js'
-import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, crafteosPosibles, ingredientes, tasaRetorno } from './calculo.js'
+import { famaRestanteCrafteo, famaPorCrafteo, crafteosNecesarios, crafteosPosibles, nivelAlcanzado, ingredientes, tasaRetorno } from './calculo.js'
 import { nf, campo, panel, Icono, IconoFama, DeslizadorRango, Selector } from './ui.jsx'
 
 // Comidas y pociones: una rama = un nodo del Tablero del Destino (todos con la misma tabla de fama).
@@ -15,6 +15,7 @@ export default function Crafteo({ tipo }) {
   const [bono, setBono] = useState(0)
   const [premium, setPremium] = useState(false)
   const [tengo, setTengo] = useState({})
+  const [resultado, setResultado] = useState(null) // foto al pulsar "Calcular spec": no cambia hasta volver a pulsar
   const [foco, setFoco] = useState(false)
   const [ciudad, setCiudad] = useState(false)
 
@@ -71,6 +72,22 @@ export default function Crafteo({ tipo }) {
               <span>Con lo que tienes no alcanza para 1 crafteo: te falta <b className="text-amber-400">{NOMBRES_INGREDIENTE[posibles.limitante]}</b>.</span>
             )}
           </p>
+          <button type="button" disabled={posibles.crafteos === 0}
+            className="mt-3 w-full rounded-lg border border-amber-400 bg-amber-500/20 px-4 py-2 font-semibold text-amber-300 transition hover:bg-amber-500/30 disabled:opacity-40"
+            onClick={() => {
+              const ganada = Math.floor(posibles.crafteos * famaCrafteo * (1 + bonoTotal / 100))
+              setResultado({ ganada, desde: nivel, rama: info.nombre, ...nivelAlcanzado(nivel, acumulada, ganada) })
+            }}>
+            Calcular spec
+          </button>
+          {resultado && (
+            <p className="mt-3">
+              Crafteando todo eso de {resultado.rama} ganas <b className="text-amber-400">{nf.format(resultado.ganada)}</b> <IconoFama /> de fama
+              {bonoTotal ? ` (con +${bonoTotal}% de bono)` : ''} y pasas del nivel {resultado.desde} al{' '}
+              <b className="text-amber-400">{resultado.nivel}</b>
+              {resultado.nivel < 100 && ` (con ${nf.format(resultado.sobra)} de fama ya acumulada en ese nivel)`}.
+            </p>
+          )}
         </div>
       </section>
 
